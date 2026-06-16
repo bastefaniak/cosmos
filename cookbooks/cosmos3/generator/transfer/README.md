@@ -126,6 +126,10 @@ cookbooks/cosmos3/generator/transfer/assets/depth/control_depth.mp4
 If your server does not run from the repo root, start it from the repo root or
 adjust `control_path` to a path the server process can read.
 
+Transfer requests should also pass the spec `resolution` inside `extra_params`.
+The video API `size` field controls the output size string, but Cosmos3 transfer
+bucket selection reads `extra_params.resolution`.
+
 Send a depth-transfer request:
 
 ```python
@@ -157,6 +161,7 @@ response = requests.post(
                 "use_duration_template": False,
                 "guardrails": True,
                 "depth": {"control_path": control_path.as_posix()},
+                "resolution": "720",
                 "control_guidance": 1.5,
                 "num_video_frames_per_chunk": 121,
                 "max_frames": 121,

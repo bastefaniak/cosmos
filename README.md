@@ -413,7 +413,7 @@ curl -sS -X POST http://localhost:8000/v1/videos/sync \
   --form-string "guidance_scale=3.0" \
   --form-string "flow_shift=10.0" \
   --form-string "seed=2026" \
-  --form-string 'extra_params={"use_resolution_template":false,"use_duration_template":false,"guardrails":true,"depth":{"control_path":"cookbooks/cosmos3/generator/transfer/assets/depth/control_depth.mp4"},"control_guidance":1.5,"num_video_frames_per_chunk":121,"max_frames":121}' \
+  --form-string 'extra_params={"use_resolution_template":false,"use_duration_template":false,"guardrails":true,"depth":{"control_path":"cookbooks/cosmos3/generator/transfer/assets/depth/control_depth.mp4"},"resolution":"720","control_guidance":1.5,"num_video_frames_per_chunk":121,"max_frames":121}' \
   -o cosmos3_transfer_depth.mp4
 ```
 
@@ -434,7 +434,7 @@ Common request fields (the image endpoint follows the [Image Generation API](htt
 | `max_sequence_length` | Maximum number of prompt tokens kept for conditioning (Cosmos 3 default `512`); longer prompts are truncated with a warning, shorter ones padded |
 | `input_reference` | Uploaded image or video for image-to-video, video-to-video, and action requests |
 | `video_reference` | JSON-safe video reference for video-to-video requests, such as `{"video_url":"https://..."}`; do not combine with `input_reference` or `image_reference` |
-| `extra_params` | JSON-encoded Cosmos 3-specific options: action settings (`action_mode`, `domain_name`, `raw_action_dim`, `action_chunk_size`, `action_path`), video-to-video conditioning (`condition_frame_indexes_vision`, `condition_video_keep`), transfer hints (`edge`, `blur`, `depth`, `seg`, `wsm`), prompt-template toggles (`use_resolution_template`, `use_duration_template`), and the per-request `guardrails` toggle |
+| `extra_params` | JSON-encoded Cosmos 3-specific options: action settings (`action_mode`, `domain_name`, `raw_action_dim`, `action_chunk_size`, `action_path`), video-to-video conditioning (`condition_frame_indexes_vision`, `condition_video_keep`), transfer hints (`edge`, `blur`, `depth`, `seg`, `wsm`) and transfer bucket `resolution`, prompt-template toggles (`use_resolution_template`, `use_duration_template`), and the per-request `guardrails` toggle |
 | `extra_args` | JSON object for Cosmos 3-specific image-endpoint options such as `use_resolution_template` |
 
 Disabling guardrails: Cosmos 3 ships safety guardrails that screen prompts and blur faces in generated output. Disable them per request by adding `guardrails: false` to `extra_params`:
