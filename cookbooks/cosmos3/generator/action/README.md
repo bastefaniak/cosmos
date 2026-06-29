@@ -1,14 +1,30 @@
-# Cosmos3 Generator Action Examples
+# Cosmos3 Generator Action
 
-Cosmos3-Nano action-generation examples across two inference backends — native
+Cosmos3-Nano action-generation supports three distinct tasks:
+
+- **Forward dynamics (`fd`)** — predict future observations from a start image plus an action trajectory.
+- **Inverse dynamics (`id`)** — predict ego-motion trajectories from input AV or camera videos using the Cosmos3-Nano.
+- **Policy (`policy`)** — predict future observations and action trajectories from a start image, task instruction, and state.
+
+Each of the modes can be explored interactively using the [Action Viewer](https://huggingface.co/spaces/nvidia/Cosmos3-Action-Viewer) Hugging Face space.
+The rest of this doc shows how to run these modes on selected embodiments directly.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Run with Cosmos Framework](#run-with-cosmos-framework)
+  - [Quickstart](#quickstart)
+  - [Cosmos Framework Walkthrough](#cosmos-framework-walkthrough)
+- [Run with vLLM-Omni](#run-with-vllm-omni)
+  - [Quickstart](#quickstart-1)
+  - [Notebook walkthrough](#vllm-omni-notebook-walkthrough)
+- [Post-Train for Cosmos3-Nano-Policy-DROID](#post-train-for-cosmos3-nano-policy-droid)
+
+## Overview
+
+All examples are shown across two different inference backends — native
 PyTorch (Cosmos Framework) and vLLM-Omni. Both backends use the sample assets
-under [`assets/`](./assets) and cover two tasks:
-
-- **Forward dynamics (`fd`)** — predict future observations from a start image
-  plus an action trajectory (AV, DROID, and UMI robotics examples) using the Cosmos3-Nano.
-- **Inverse dynamics (`id`)** — predict ego-motion trajectories from input AV
-  videos using the Cosmos3-Nano.
-- **Policy (`policy`)** — predict future observations and action trajectories from a start image, task instruction, and state for DROID robot using the Cosmos3-Nano-Policy-DROID.
+under [`assets/`](./assets) and cover three tasks:
 
 Environment setup for both backends is centralized in the shared
 [Cosmos3 cookbooks environment setup](../../README.md) guide; each backend below
@@ -19,16 +35,6 @@ Generator requires the Guardrail. Request access to the gated
 HF repository before running these examples. To disable the guardrail, set
 `enable_safety_checker=False` (Diffusers), `guardrails: false` (vLLM-Omni
 `extra_params`/`extra_args`), or `--no-guardrails` (Cosmos Framework).
-
-## Table of Contents
-
-- [Run with Cosmos Framework](#run-with-cosmos-framework)
-  - [Quickstart](#quickstart)
-  - [Cosmos Framework Walkthrough](#cosmos-framework-walkthrough)
-- [Run with vLLM-Omni](#run-with-vllm-omni)
-  - [Quickstart](#quickstart-1)
-  - [Notebook walkthrough](#notebook-walkthrough)
-
 
 ## Action Definition
 
@@ -121,6 +127,13 @@ write outputs under `outputs/cosmos3_action_vllm/`:
   DROID, and UMI robotics examples.
 - [`run_id_with_vllm.ipynb`](./run_id_with_vllm.ipynb) — inverse dynamics,
   predicting ego-motion trajectories from input AV videos.
+
+## Post-Train for Cosmos3-Nano-Policy-DROID
+
+To reproduce our post-training recipe for [Cosmos3-Nano-Policy-DROID](https://huggingface.co/nvidia/Cosmos3-Nano-Policy-DROID), use the
+[Cosmos3-Nano-Policy-DROID SFT cookbook](./finetune/README.md). It follows the same
+launch-script pattern as the other Cosmos3 finetune cookbooks while delegating
+the canonical training implementation to Cosmos Framework.
 
 
 
