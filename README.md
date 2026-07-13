@@ -290,9 +290,9 @@ See the [Cosmos 3 Diffusers documentation](https://huggingface.co/docs/diffusers
 
 Use vLLM-Omni for Generator production inference behind an OpenAI-compatible API. This integration loads the full Cosmos 3 checkpoint, including the Qwen3-VL-based reasoner path and the diffusion generation path. For understanding-only tasks that return text, use [Reasoner with vLLM](#reasoner-with-vllm) instead, which loads only the reasoner.
 
-> **Compatibility status:** Cosmos 3 Generator support is available in [vllm-project/vllm-omni](https://github.com/vllm-project/vllm-omni) `main` for text-to-image, text-to-video, image-to-video, video-to-video, transfer-control video-to-video, video-with-sound, and action generation. Transfer-control video-to-video requires installing vLLM-Omni from `main` until the `vllm/vllm-omni:v0.23.0` Docker image is released. For current setup and per-modality usage, see the maintained recipes: [Cosmos3-Nano](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md) and [Cosmos3-Super](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Super.md).
+> **Compatibility status:** Cosmos 3 Generator support is available in [vllm-project/vllm-omni](https://github.com/vllm-project/vllm-omni) `main` for text-to-image, text-to-video, image-to-video, video-to-video, transfer-control video-to-video, video-with-sound, and action generation. For current setup and per-modality usage, see the maintained recipes: [Cosmos3-Nano](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md) and [Cosmos3-Super](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Super.md).
 
-Start the server from the Docker image for released image/video/sound/action modes. Mount any directory that contains local media or action files you want the server to read. The command below runs from `/workspace`, so repo-local paths such as `cookbooks/...` resolve inside the container.
+Start the server from the `vllm/vllm-omni:v0.24.0` Docker image. Mount any directory that contains local media or action files you want the server to read. The command below runs from `/workspace`, so repo-local paths such as `cookbooks/...` resolve inside the container.
 
 ```shell
 docker run --runtime nvidia --gpus all \
@@ -301,7 +301,7 @@ docker run --runtime nvidia --gpus all \
   -p 8000:8000 \
   --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:cosmos3 \
+  vllm/vllm-omni:v0.24.0 \
   vllm serve nvidia/Cosmos3-Nano \
   --omni \
   --model-class-name Cosmos3OmniDiffusersPipeline \
@@ -339,7 +339,7 @@ uv pip install --torch-backend=cu130 \
 #   "vllm-omni @ git+https://github.com/vllm-project/vllm-omni.git@main"
 ```
 
-Then run `vllm serve nvidia/Cosmos3-Nano --omni --model-class-name Cosmos3OmniDiffusersPipeline --allowed-local-media-path / --port 8000 --init-timeout 1800` directly, without the `docker run ... vllm/vllm-omni:cosmos3` wrapper.
+Then run `vllm serve nvidia/Cosmos3-Nano --omni --model-class-name Cosmos3OmniDiffusersPipeline --allowed-local-media-path / --port 8000 --init-timeout 1800` directly, without the `docker run ... vllm/vllm-omni:v0.24.0` wrapper.
 
 Vision endpoints:
 
@@ -349,7 +349,7 @@ Vision endpoints:
 | Text to video | `POST /v1/videos/sync` | Blocks and returns the MP4 bytes directly |
 | Image to video | `POST /v1/videos/sync` | Upload the conditioning image with `input_reference` |
 | Video to video | `POST /v1/videos/sync` | Upload a source video and choose which frames stay as clean conditioning |
-| Transfer video to video | `POST /v1/videos/sync` | Pass a transfer hint such as `edge`, `blur`, `depth`, `seg`, or `wsm` in `extra_params` |
+| Transfer video to video | `POST /v1/videos/sync` | Pass one or more transfer hints such as `edge`, `blur`, `depth`, `seg`, or `wsm` in `extra_params` |
 | Video with sound | `POST /v1/videos/sync` | Add `generate_sound=true` to supported text-to-video or image-to-video requests |
 
 Action modes use Cosmos 3 as a world model: they condition on an embodiment (`domain_name`) and exchange video and action sequences. Policy and inverse dynamics return a predicted action chunk, so send those through the asynchronous `POST /v1/videos` job and read the action data from the completed result; forward dynamics returns only video and can use synchronous `POST /v1/videos/sync`.
@@ -817,6 +817,7 @@ Post-train Cosmos 3 on your own data with the supervised fine-tuning (SFT) cookb
 | [Policy-DROID SFT](cookbooks/cosmos3/generator/action/finetune/README.md) | Generator | Cosmos3-Nano | Full SFT for action policy on the DROID dataset | [`launch_sft_action_policy_droid.sh`](cookbooks/cosmos3/generator/action/finetune/launch_sft_action_policy_droid.sh) |
 | [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Nano | Alignment SFT on LLaVA-OneVision | [`launch_sft_llava_ov.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_llava_ov.sh) |
 | [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Nano | Physical-plausibility SFT on VideoPhy-2 | [`launch_sft_videophy2_nano.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_videophy2_nano.sh) |
+| [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Super | Physical-plausibility SFT on VideoPhy-2 | [`launch_sft_videophy2_super.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_videophy2_super.sh) |
 
 These cookbooks run on the [Cosmos Framework](https://github.com/NVIDIA/cosmos-framework), NVIDIA's end-to-end Physical AI framework for training and serving world models. For the full post-training reference — every config field, raw `torchrun`, resuming, and advanced parallelism — see the [Cosmos Framework training guide](https://github.com/NVIDIA/cosmos-framework/blob/main/docs/training.md).
 

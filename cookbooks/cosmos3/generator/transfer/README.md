@@ -10,22 +10,27 @@ Sample assets under [`assets/`](./assets) cover spatial control signals paired w
 - **Depth** — depth map control plus caption.
 - **Segmentation** — segmentation map control plus caption.
 - **World scenario (WSM)** — world-scenario map control plus caption.
+- **Multi-control** — two or more hints; Cosmos Framework also supports per-hint weights.
+
+Both Cosmos Framework and vLLM-Omni support multi-control transfer. Per-hint
+weighting is supported only by Cosmos Framework; vLLM-Omni accepts multiple
+controls but does not support per-hint weights.
 
 Environment setup is centralized in the shared
 [Cosmos3 cookbooks environment setup](../../README.md) guide.
 
 ## Transfer Definition
 
-Video transfer generates a target clip from a `prompt.json` caption and a
-precomputed control video on a hint block (`control_path`). The Framework path
-uses `model_mode` `video2video` in a local JSON spec. The vLLM-Omni path uses
-`POST /v1/videos/sync` and passes the same hint key (`edge`, `blur`, `depth`,
-`seg`, or `wsm`) inside `extra_params`.
-
-There is no source RGB video at run time for the checked-in transfer examples.
-Output frame count and geometry come from the control video; see the spec field
-reference for how `fps` and `aspect_ratio` are resolved. All examples share
-`assets/negative_prompt.json` for the negative caption.
+Video transfer generates a target clip from a `prompt.json` caption and one or more
+spatial control signals. The Framework path uses `model_mode` `video2video` in a local JSON spec.
+The vLLM-Omni path uses `POST /v1/videos/sync` and passes one or more hint keys (`edge`, `blur`,
+`depth`, `seg`, or `wsm`) inside `extra_params`. Cosmos Framework accepts pre-computed
+control videos (`control_path`) or derives active controls from a raw source video
+(`vision_path`). With vLLM-Omni, pass pre-computed controls through `control_path`; edge
+and blur controls can also be derived from an uploaded `input_reference`. Output frame
+count and geometry come from the control video; see the spec field reference for how
+`fps` and `aspect_ratio` are resolved. All examples share `assets/negative_prompt.json`
+for the negative caption.
 
 | Control | Asset folder | Inference input | Generation duration |
 | --- | --- | --- | --- |
@@ -34,6 +39,7 @@ reference for how `fps` and `aspect_ratio` are resolved. All examples share
 | Depth | `assets/depth/` | `control_depth.mp4` + `prompt.json` | 121 frames @ 30 FPS |
 | Segmentation | `assets/seg/` | `control_seg.mp4` + `prompt.json` | 121 frames @ 30 FPS |
 | World scenario (WSM) | `assets/wsm/` | `control_wsm.mp4` + `prompt.json` | 101 frames @ 10 FPS |
+| Multi-control | `assets/multi_control/` | `vision_path` + multiple hints (Framework example) | 121 frames @ 30 FPS |
 
 Transfer inference is selected automatically when any hint key is present in the
 Framework spec or in vLLM-Omni `extra_params`.
@@ -42,7 +48,7 @@ entirely by `--checkpoint-path`.
 
 ## Run with Cosmos Framework
 
-### Quickstart
+### Quickstart — Single-control transfer
 
 Set up the environment: [Cosmos Framework setup](../../README.md#cosmos-framework).
 Run the commands below inside the **cosmos container** (e.g. `pytorch:25.09-py3`) — the same
@@ -109,12 +115,13 @@ name, e.g. `outputs/Cosmos3-Nano/transfer_edge/vision.mp4`.
 
 [`run_video_transfer_with_cosmos_framework.ipynb`](./run_video_transfer_with_cosmos_framework.ipynb)
 is a self-contained tutorial: it installs all dependencies (system packages, framework
-clone, Python venv via `uv`), authenticates with Hugging Face, and runs all five controls
+clone, Python venv via `uv`), authenticates with Hugging Face, and runs all six controls
 with previews.
 
 1. Open the notebook and edit **§2 (Configure)** — paste your `HF_TOKEN` and optionally
    set cache/output paths.
-2. Run **§9–§13** for Cosmos3-Nano (single GPU) or **§14–§18** for Cosmos3-Super (multi-GPU).
+2. Run **§9–§13** for Cosmos3-Nano single-control (single GPU), **§14–§18** for Cosmos3-Super
+   single-control (multi-GPU), or **§19** for multi-control (Nano).
    No model flag needed — each section uses its matching checkpoint explicitly.
 
 To execute headlessly:
@@ -130,12 +137,16 @@ Outputs land under `outputs/notebooks/<model>/transfer_<control>/vision.mp4`.
 
 ### Quickstart
 
+vLLM-Omni accepts multiple control hints in one request, but does not support
+the per-hint `weight` field available in Cosmos Framework.
+
 Set up the environment and start the server:
-[vLLM-Omni setup](../../README.md#vllm-omni). Transfer controls require the
-native vLLM-Omni install from `main` until the `vllm/vllm-omni:v0.23.0` Docker
-image is released. If you use a released image with transfer, run the
-Docker command from the `cosmos` repo root so the repo is mounted at
-`/workspace` and the server runs from that directory inside the container:
+[vLLM-Omni setup](../../README.md#vllm-omni). Transfer controls are available from
+vLLM-Omni `main` and the released `vllm/vllm-omni:v0.24.0` container. Check the current
+[Cosmos3-Nano recipe](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md)
+before selecting an image. For Docker, run the command from the `cosmos` repo root so
+the repo is mounted at `/workspace` and the server runs from that directory inside the
+container:
 
 ```bash
 export COSMOS3_WORKDIR="$(pwd)"
@@ -242,10 +253,12 @@ Key fields:
 ### Cookbook entrypoints
 
 - [`run_video_transfer_with_cosmos_framework.ipynb`](./run_video_transfer_with_cosmos_framework.ipynb) —
-  self-contained notebook: §9–§13 Nano (single GPU), §14–§18 Super (multi-GPU). Edit §2, run top-to-bottom.
+  self-contained notebook: §9–§13 Nano single-control, §14–§18 Super single-control, §19 multi-control (Nano). Edit §2, run top-to-bottom.
 - [`run_video_transfer_with_vllm_omni.ipynb`](./run_video_transfer_with_vllm_omni.ipynb) —
   full tutorial against an already-running vLLM-Omni server: endpoint checks, repo-local
-  control paths, five transfer requests, and compact previews.
+  control paths, five single-control transfer requests, and compact previews. The API
+  also accepts unweighted multi-control requests by including multiple hint blocks in
+  `extra_params`.
 - [`specs/`](./specs) — checked-in Framework input JSON per control (paths relative to `specs/`).
   Shared by both Nano and Super.
 

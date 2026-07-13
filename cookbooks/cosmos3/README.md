@@ -180,7 +180,7 @@ uv pip install --torch-backend=auto \
   pillow \
   "safetensors>=0.8.0" \
   torch \
-  torchvision \
+  "torchvision==0.25.0" \
   "transformers>=5.11.0"
 ```
 
@@ -280,14 +280,41 @@ Generator cookbooks.
 Cosmos3 checkpoints can exceed the default server init timeout — always pass
 `--init-timeout 1800` on every `vllm serve` command below.
 
-### Option 1: Docker (recommended)
+### Guardrails (gated dependency)
 
-The prebuilt image `vllm/vllm-omni:cosmos3` supports the released Generator
-modalities. Transfer controls require the native vLLM-Omni install from `main`
-until the `vllm/vllm-omni:v0.23.0` Docker image is released. Pull once:
+The vLLM-Omni server loads gated
+[nvidia/Cosmos-1.0-Guardrail](https://huggingface.co/nvidia/Cosmos-1.0-Guardrail)
+at startup by default. Without Hugging Face access to that repo, the server
+exits before serving requests. Per-request `guardrails: false` in `extra_params`
+(see [Prerequisites](#prerequisites)) does not fix this — the guardrail models
+must load at startup.
+
+To disable guardrails server-wide (you are responsible for
+[license compliance](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license)),
+add `--no-guardrails` to any `vllm serve` command below:
 
 ```bash
-docker pull vllm/vllm-omni:cosmos3
+vllm serve nvidia/Cosmos3-Nano \
+  --omni \
+  --model-class-name Cosmos3OmniDiffusersPipeline \
+  --no-guardrails \
+  --allowed-local-media-path / \
+  --port 8000 \
+  --init-timeout 1800
+```
+
+Alternatively, pass a
+[`--deploy-config`](../../README.md#generator-with-vllm-omni) as documented in
+the repository root README. See also the
+[vLLM-Omni Cosmos3-Nano recipe](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md).
+
+### Option 1: Docker (recommended)
+
+The released image `vllm/vllm-omni:v0.24.0` supports the Generator modalities,
+including transfer controls. Pull once:
+
+```bash
+docker pull vllm/vllm-omni:v0.24.0
 ```
 
 Set paths once; adjust for your checkout and cache location:
@@ -312,7 +339,7 @@ docker run --runtime nvidia --gpus '"device=0"' \
   -v "${COSMOS3_WORKDIR}:/workspace" \
   -p "${COSMOS3_HOST_PORT}:8000" --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:cosmos3 \
+  vllm/vllm-omni:v0.24.0 \
   vllm serve nvidia/Cosmos3-Nano \
     --omni \
     --model-class-name Cosmos3OmniDiffusersPipeline \
@@ -329,7 +356,7 @@ docker run --runtime nvidia --gpus all \
   -v "${COSMOS3_WORKDIR}:/workspace" \
   -p "${COSMOS3_HOST_PORT}:8000" --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:cosmos3 \
+  vllm/vllm-omni:v0.24.0 \
   vllm serve nvidia/Cosmos3-Super \
     --omni \
     --model-class-name Cosmos3OmniDiffusersPipeline \
