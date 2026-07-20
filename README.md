@@ -378,7 +378,7 @@ Use vLLM-Omni for Generator production inference behind an OpenAI-compatible API
 
 > **Compatibility status:** Cosmos 3 Generator support is available in [vllm-project/vllm-omni](https://github.com/vllm-project/vllm-omni) `main` for text-to-image, text-to-video, image-to-video, video-to-video, transfer-control video-to-video, video-with-sound, and action generation. For current setup and per-modality usage, see the maintained recipes: [Cosmos3-Nano](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md) and [Cosmos3-Super](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Super.md).
 
-Start the server from the `vllm/vllm-omni:v0.24.0` Docker image. Mount any directory that contains local media or action files you want the server to read. The command below runs from `/workspace`, so repo-local paths such as `cookbooks/...` resolve inside the container.
+Start the server from the `vllm/vllm-omni:cosmos3` Docker image. Mount any directory that contains local media or action files you want the server to read. The command below runs from `/workspace`, so repo-local paths such as `cookbooks/...` resolve inside the container.
 
 ```shell
 docker run --runtime nvidia --gpus all \
@@ -387,7 +387,7 @@ docker run --runtime nvidia --gpus all \
   -p 8000:8000 \
   --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:v0.24.0 \
+  vllm/vllm-omni:cosmos3 \
   vllm serve nvidia/Cosmos3-Nano \
   --omni \
   --model-class-name Cosmos3OmniDiffusersPipeline \
@@ -425,7 +425,7 @@ uv pip install --torch-backend=cu130 \
 #   "vllm-omni @ git+https://github.com/vllm-project/vllm-omni.git@main"
 ```
 
-Then run `vllm serve nvidia/Cosmos3-Nano --omni --model-class-name Cosmos3OmniDiffusersPipeline --allowed-local-media-path / --port 8000 --init-timeout 1800` directly, without the `docker run ... vllm/vllm-omni:v0.24.0` wrapper.
+Then run `vllm serve nvidia/Cosmos3-Nano --omni --model-class-name Cosmos3OmniDiffusersPipeline --allowed-local-media-path / --port 8000 --init-timeout 1800` directly, without the `docker run ... vllm/vllm-omni:cosmos3` wrapper.
 
 Vision endpoints:
 

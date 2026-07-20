@@ -142,7 +142,7 @@ the per-hint `weight` field available in Cosmos Framework.
 
 Set up the environment and start the server:
 [vLLM-Omni setup](../../README.md#vllm-omni). Transfer controls are available from
-vLLM-Omni `main` and the released `vllm/vllm-omni:v0.24.0` container. Check the current
+vLLM-Omni `main` and the released `vllm/vllm-omni:cosmos3` container. Check the current
 [Cosmos3-Nano recipe](https://github.com/vllm-project/vllm-omni/blob/main/recipes/cosmos3/Cosmos3-Nano.md)
 before selecting an image. For Docker, run the command from the `cosmos` repo root so
 the repo is mounted at `/workspace` and the server runs from that directory inside the

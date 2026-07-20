@@ -325,11 +325,11 @@ the repository root README. See also the
 
 ### Option 1: Docker (recommended)
 
-The released image `vllm/vllm-omni:v0.24.0` supports the Generator modalities,
+The released image `vllm/vllm-omni:cosmos3` supports the Generator modalities,
 including transfer controls. Pull once:
 
 ```bash
-docker pull vllm/vllm-omni:v0.24.0
+docker pull vllm/vllm-omni:cosmos3
 ```
 
 Set paths once; adjust for your checkout and cache location:
@@ -354,7 +354,7 @@ docker run --runtime nvidia --gpus '"device=0"' \
   -v "${COSMOS3_WORKDIR}:/workspace" \
   -p "${COSMOS3_HOST_PORT}:8000" --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:v0.24.0 \
+  vllm/vllm-omni:cosmos3 \
   vllm serve nvidia/Cosmos3-Nano \
     --omni \
     --model-class-name Cosmos3OmniDiffusersPipeline \
@@ -371,7 +371,7 @@ docker run --runtime nvidia --gpus all \
   -v "${COSMOS3_WORKDIR}:/workspace" \
   -p "${COSMOS3_HOST_PORT}:8000" --ipc=host \
   -w /workspace \
-  vllm/vllm-omni:v0.24.0 \
+  vllm/vllm-omni:cosmos3 \
   vllm serve nvidia/Cosmos3-Super \
     --omni \
     --model-class-name Cosmos3OmniDiffusersPipeline \
