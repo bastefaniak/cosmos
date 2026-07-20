@@ -1,6 +1,6 @@
 # Cosmos3 Generator Audiovisual Examples
 
-Generate images and video (with optional audio) from text or image prompts with
+Generate images and video (with optional audio) from text, image or video prompts with
 `Cosmos3-Nano`, `Cosmos3-Super`, `Cosmos3-Edge`, and the published four-step
 distilled Cosmos3-Super students across Cosmos Framework, Diffusers, vLLM-Omni,
 and NIM backends. Sample prompts live under [`assets/`](./assets).
