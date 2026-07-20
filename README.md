@@ -8,6 +8,7 @@
 <p align="center">
   <a href="https://www.nvidia.com/en-us/ai/cosmos/">Website</a> |
   <a href="https://github.com/NVIDIA/cosmos-framework">Framework</a> |
+  <a href="https://github.com/NVIDIA/cosmos-framework#agent-skills">Agent Skills</a> |
   <a href="https://huggingface.co/collections/nvidia/cosmos3">Models</a>
 </p>
 
@@ -27,6 +28,7 @@
     - [Generator with Diffusers](#generator-with-diffusers)
     - [Generator with vLLM-Omni](#generator-with-vllm-omni)
     - [Generator with NIM](#generator-with-nim)
+    - [Generator with SGLang](#generator-with-sglang)
     - [Reasoner with Transformers](#reasoner-with-transformers)
     - [Reasoner with vLLM](#reasoner-with-vllm)
     - [Reasoner with NIM](#reasoner-with-nim)
@@ -40,6 +42,8 @@
   - [Examples](#examples)
   - [Inference Benchmarks](#inference-benchmarks)
   - [Finetune](#finetune)
+  - [Export and Convert Checkpoints](#export-and-convert-checkpoints)
+  - [Distill](#distill)
   - [Limitations](#limitations)
 - [Ecosystem](#ecosystem)
 - [News](#news)
@@ -65,7 +69,7 @@ Cosmos 3 exposes two runtime surfaces:
 - **World understanding:** Analyze videos and images for captions, temporal events, next actions, spatial grounding, physical plausibility, and causal outcomes.
 - **World generation:** Produce images, videos, synchronized sound, and action-conditioned rollouts from text, image, video, or action inputs.
 - **Action modeling:** Predict policy actions, inverse dynamics, and forward dynamics for robotics, camera motion, egocentric motion, and autonomous-driving settings.
-- **Research and production paths:** Use Diffusers and Transformers for Python-first development, vLLM-Omni and vLLM for OpenAI-compatible serving, and NIM containers for turnkey Reasoner serving or Generator deployment for text to video and image to video generations.
+- **Research and production paths:** Use Diffusers and Transformers for Python-first development, vLLM-Omni, vLLM, or SGLang for OpenAI-compatible serving, and NIM containers for turnkey Reasoner serving or Generator deployment for text-to-video and image-to-video generation.
 - **Post-training recipes:** Adapt vision, action, and reasoner workflows with Cosmos Framework training recipes and task-specific evaluation [Coming Soon].
 
 ### Model Architecture
@@ -77,13 +81,90 @@ Cosmos 3 is an omnimodal world model built on a unified Mixture-of-Transformers 
 
 ### Model Family
 
-| Model | Size | Primary Capability |
-|---------|---------:|---------|
-| **[Cosmos3-Nano](https://huggingface.co/nvidia/Cosmos3-Nano)** | 16B | Compact omnimodal world model for multimodal understanding, world simulation, future prediction, action reasoning, and Physical AI. |
-| **[Cosmos3-Super](https://huggingface.co/nvidia/Cosmos3-Super)** | 64B | Frontier-scale omnimodal world model for advanced multimodal understanding, world simulation, future prediction, action reasoning, and Physical AI. |
-| **[Cosmos3-Super-Text2Image](https://huggingface.co/nvidia/Cosmos3-Super-Text2Image)** | 64B | High-fidelity text-to-image generation. |
-| **[Cosmos3-Super-Image2Video](https://huggingface.co/nvidia/Cosmos3-Super-Image2Video)** | 64B | Temporally coherent image-to-video generation. |
-| **[Cosmos3-Nano-Policy-DROID](https://huggingface.co/nvidia/Cosmos3-Nano-Policy-DROID)** | 16B | Vision-language robot policy for DROID manipulation and control. |
+<table width="100%">
+  <thead>
+    <tr>
+      <th align="left" width="16%"></th>
+      <th align="left" width="28%"><a href="https://huggingface.co/nvidia/Cosmos3-Super">Cosmos3-Super</a></th>
+      <th align="left" width="28%"><a href="https://huggingface.co/nvidia/Cosmos3-Nano">Cosmos3-Nano</a></th>
+      <th align="left" width="28%"><a href="https://huggingface.co/nvidia/Cosmos3-Edge">Cosmos3-Edge</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Size</strong></td>
+      <td>64B</td>
+      <td>16B</td>
+      <td>4B</td>
+    </tr>
+    <tr>
+      <td><strong>Recommended Hardware</strong></td>
+      <td>Data Center: H200 / B200 / GB200</td>
+      <td>Data Center and Workstation: RTX Pro 6000 / H100 / B200</td>
+      <td>Edge and On-Device: Jetson AGX Orin / Thor / RTX Pro 6000</td>
+    </tr>
+    <tr>
+      <td><strong>Input</strong></td>
+      <td>Text / Image / Video / Action</td>
+      <td>Text / Image / Video / Action</td>
+      <td>Text / Image / Video<sup>2</sup> / Action</td>
+    </tr>
+    <tr>
+      <td><strong>Output</strong></td>
+      <td>Text / Image / Video / Sound<sup>1</sup> / Action</td>
+      <td>Text / Image / Video / Sound<sup>1</sup> / Action</td>
+      <td>Text / Image / Video / Action</td>
+    </tr>
+    <tr>
+      <td><strong>Suited For</strong></td>
+      <td>Data center deployment; high quality synthetic data generation; teacher model for distillation</td>
+      <td>Flexible hardware range; balanced speed and quality; strong base model to post-train</td>
+      <td>Edge deployment; real-time robotic policy; real-time visual reasoning</td>
+    </tr>
+    <tr>
+      <td><strong>Model Variants</strong></td>
+      <td>
+        SoTA image/video generation:
+        <ul>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Super-Text2Image">Cosmos3-Super-Text2Image</a></li>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Super-Image2Video">Cosmos3-Super-Image2Video</a></li>
+        </ul>
+        SoTA quality with 17-25x speed up:
+        <ul>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Super-Text2Image-4Step">Cosmos3-Super-Text2Image-4Step</a></li>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Super-Image2Video-4Step">Cosmos3-Super-Image2Video-4Step</a></li>
+        </ul>
+        Less memory, higher speed:
+        <ul>
+          <li>FP8/NVFP4 (coming soon)</li>
+        </ul>
+      </td>
+      <td>
+        SoTA World Action Model:
+        <ul>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Nano-Policy-DROID">Cosmos3-Nano-Policy-DROID</a></li>
+        </ul>
+        Less memory, higher speed:
+        <ul>
+          <li>FP8/NVFP4 (coming soon)</li>
+        </ul>
+      </td>
+      <td>
+        Real-time World Action Model:
+        <ul>
+          <li><a href="https://huggingface.co/nvidia/Cosmos3-Edge-Policy-DROID">Cosmos3-Edge-Policy-DROID</a></li>
+        </ul>
+        Less memory, higher speed:
+        <ul>
+          <li>FP8/NVFP4 (coming soon)</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<sup>1</sup> The models generate sound along with the video, not standalone.<br>
+<sup>2</sup> Cosmos3-Edge currently doesn't support video-to-video transfer.
 
 
 ### Supported Generation Settings
@@ -97,6 +178,8 @@ Cosmos 3 is an omnimodal world model built on a unified Mixture-of-Transformers 
 | Precision         | BF16 tested                             |
 | Operating system  | Linux                                   |
 | GPU architectures | NVIDIA Ampere, Hopper, and Blackwell    |
+
+Cosmos3-Edge only supports 256p and 480p resolution, 12–30 fps, and 50–150 frames.
 
 ### Input and Output
 
@@ -564,6 +647,169 @@ the generated MP4 files.
 
 </details>
 
+#### Generator with SGLang
+
+<details>
+<summary>Expand SGLang generator setup, endpoints, and request reference</summary>
+
+Use SGLang Diffusion for native Cosmos 3 visual generation behind OpenAI-compatible image and video APIs. Cosmos 3 also includes video-with-sound and action/policy models; this SGLang section focuses on the currently supported text-to-image, text-to-video, and image-to-video generator serving paths.
+
+Supported checkpoints:
+
+| Model | Status | Notes |
+| --- | --- | --- |
+| `nvidia/Cosmos3-Nano` | Supported | Text-to-image, text-to-video, image-to-video |
+| `nvidia/Cosmos3-Super` | Supported | Use multiple GPUs for the 64B checkpoint |
+| `nvidia/Cosmos3-Super-Text2Image` | Supported | Text-to-image specialized checkpoint |
+| `nvidia/Cosmos3-Super-Image2Video` | Supported | Image-to-video specialized checkpoint |
+| `nvidia/Cosmos3-Nano-Policy-DROID` | Supported | Action/policy checkpoint |
+
+Install SGLang from the main branch with diffusion extras:
+
+```shell
+git clone --branch main https://github.com/sgl-project/sglang.git
+cd sglang
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -e "python[diffusion]"
+pip install "cosmos-guardrail==0.3.1"
+```
+
+> **Version note:** Cosmos 3 support in SGLang Diffusion currently requires the SGLang main branch. Switch to a stable SGLang release once Cosmos 3 support is included there.
+
+Start a Nano server:
+
+```shell
+sglang serve --model-path nvidia/Cosmos3-Nano
+```
+
+For a video-specialized checkpoint, use `Cosmos3-Super-Image2Video` with multiple GPUs:
+
+```shell
+sglang serve \
+  --model-path nvidia/Cosmos3-Super-Image2Video \
+  --num-gpus 4
+```
+
+This is the performance-mode setup. If it runs out of memory, switch to SGLang Diffusion's memory preset:
+
+```shell
+sglang serve \
+  --model-path nvidia/Cosmos3-Super-Image2Video \
+  --num-gpus 4 \
+  --performance-mode memory
+```
+
+Vision endpoints:
+
+| Mode | Endpoint | Notes |
+| --- | --- | --- |
+| Text to image | `POST /v1/images/generations` | Returns base64 by default for Cosmos 3 |
+| Text to video | `POST /v1/videos` | Creates an async job; poll `GET /v1/videos/{id}` and download `/content` |
+| Image to video | `POST /v1/videos` | Upload the conditioning image with `input_reference` |
+| Video to Video | `POST /v1/videos` | Upload the conditioning video with `video_reference` and choose which frames stay as clean conditioning |
+| Video with sound | `POST /v1/videos` | Add `generate_sound=true` to produce a soundtrack alongside the video |
+
+Action modes use Cosmos 3 as a world model: they condition on an embodiment (`domain_name`) and exchange video and action sequences. Policy and inverse dynamics return a predicted action chunk, and read the action data from the completed result; forward dynamics returns only video.
+
+| Mode | `action_mode` | Input | Output |
+| --- | --- | --- | --- |
+| Policy | `policy` | Image + instruction | Video + predicted action chunk |
+| Inverse dynamics | `inverse_dynamics` | Video + instruction | Video + predicted action chunk |
+| Forward dynamics | `forward_dynamics` | Image + action chunk | Video |
+
+Pass embodiment settings through `extra_params`: `action_mode`, `domain_name` (for example `bridge_orig_lerobot`, `av`, or `camera_pose`), `raw_action_dim`, and optionally `action_view_point`. SGLang derives the action chunk length from `num_frames - 1`, so set `num_frames` to `action_chunk_size + 1`.
+For forward dynamics, pass the action trajectory directly in `extra_params["action"]` as a JSON array of shape `[action_chunk_size, raw_action_dim]`. SGLang does not use action_path for HTTP requests, so no `--allowed-local-media-path` setup is needed for action files.
+
+Text-to-video example:
+
+```shell
+# Submit an async video generation job and capture its ID.
+job_id=$(curl -sS -X POST http://localhost:30000/v1/videos \
+  --form-string "prompt=A small warehouse robot moves a blue box across a clean floor." \
+  --form-string "negative_prompt=blurry, distorted, low quality" \
+  --form-string "size=1280x720" \
+  --form-string "num_frames=81" \
+  --form-string "fps=24" \
+  --form-string "num_inference_steps=35" \
+  --form-string "guidance_scale=4.0" \
+  --form-string "flow_shift=10.0" \
+  --form-string "seed=42" \
+  --form-string 'extra_params={"guardrails":true,"use_resolution_template":false,"use_duration_template":false}' \
+  | jq -r .id)
+
+# Poll until the job completes. Cosmos 3 video generation can take several minutes.
+status=""
+until [ "$status" = "completed" ]; do
+  status=$(curl -sS "http://localhost:30000/v1/videos/${job_id}" | jq -r .status)
+  [ "$status" = "failed" ] && exit 1
+  sleep 5
+done
+
+# Download the completed MP4.
+curl -sS -L "http://localhost:30000/v1/videos/${job_id}/content" \
+  -o cosmos3_t2v_output.mp4
+```
+
+Text-to-image example:
+
+```shell
+curl -sS -X POST http://localhost:30000/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A warehouse robot folds a blue cloth on a clean workbench.",
+    "size": "1280x720",
+    "n": 1,
+    "num_inference_steps": 35,
+    "guidance_scale": 6.0,
+    "flow_shift": 10.0,
+    "seed": 0,
+    "extra_args": {
+      "use_resolution_template": false,
+      "guardrails": true
+    }
+  }'
+```
+
+Video-to-video-with-sound example:
+
+```shell
+job_id=$(curl -sS --fail-with-body -X POST "http://localhost:30000/v1/videos" \
+  -H "Accept: application/json" \
+  --form-string 'prompt=A small warehouse robot moves a blue box across a clean floor.' \
+  --form-string 'negative_prompt=blurry, distorted, low quality' \
+  --form-string 'size=1280x720' \
+  --form-string 'num_frames=61' \
+  --form-string 'fps=24' \
+  --form-string 'num_inference_steps=30' \
+  --form-string 'guidance_scale=4.0' \
+  --form-string 'flow_shift=10.0' \
+  --form-string 'seed=1234' \
+  --form-string 'generate_sound=true' \
+  --form-string 'extra_params={"use_resolution_template":false,"use_duration_template":false,"guardrails":true}' \
+  -F 'video_reference=@/path/to/video.mp4;type=video/mp4' \
+  | jq -r .id)
+
+# Poll until the job completes. Cosmos 3 video generation can take several minutes.
+status=""
+until [ "$status" = "completed" ]; do
+  status=$(curl -sS "http://localhost:30000/v1/videos/${job_id}" | jq -r .status)
+  [ "$status" = "failed" ] && exit 1
+  sleep 5
+done
+
+# Download the completed MP4.
+curl -sS -L "http://localhost:30000/v1/videos/${job_id}/content" \
+  -o cosmos3_v2vs_output.mp4
+```
+
+SGLang accepts Cosmos 3 request options including `max_sequence_length`, `flow_shift`, `extra_params.guardrails`, `extra_params.use_resolution_template`, and `extra_params.use_duration_template`. Guardrails are enabled by default when `cosmos-guardrail` is installed; set `SGLANG_DISABLE_COSMOS3_GUARDRAILS=1` before starting the server to skip loading the guardrail models.
+
+For complete serving instructions and request examples, see the [Cosmos3 SGLang cookbook](https://docs.sglang.io/cookbook/diffusion/Cosmos/Cosmos3).
+
+</details>
+
 #### Reasoner with Transformers
 
 <details>
@@ -858,7 +1104,7 @@ The Cosmos Framework requires `uv >= 0.11.3` (enforced via its `pyproject.toml`)
 | Goal | Use | Notes |
 | --- | --- | --- |
 | Generator research or model development | Diffusers | Python-first path for inspecting and modifying generator behavior |
-| Generator broader production/API serving | vLLM-Omni | API path for image, video, sound, and action outputs |
+| Generator broader production/API serving | vLLM-Omni / SGLang | API path for image, video, sound, and action outputs |
 | Generator turnkey deployment | NIM | Prebuilt NGC container for T2V/I2V video generation only; uses `/v1/infer` and returns JSON `b64_video` |
 | Reasoner research or model development | Transformers | Python-first path for prompts, processors, and model behavior |
 | Reasoner production inference | vLLM | OpenAI-compatible endpoint for text outputs from text and vision inputs |
@@ -867,7 +1113,7 @@ The Cosmos Framework requires `uv >= 0.11.3` (enforced via its `pyproject.toml`)
 
 ### Examples
 
-We are building examples that show Cosmos 3 capabilities end to end, including world generation, world understanding, captioning, temporal localization, grounding, and physical reasoning. Each example is a self-contained script or notebook you can run from this repository.
+We are building examples that show Cosmos 3 Super/Nano/Edge capabilities end to end, including world generation, world understanding, captioning, temporal localization, grounding, and physical reasoning. Each example is a self-contained script or notebook you can run from this repository.
 
 | Example | Surface | Workflows demonstrated | Open | nbviewer |
 | --- | --- | --- | --- | --- |
@@ -875,10 +1121,13 @@ We are building examples that show Cosmos 3 capabilities end to end, including w
 | Generator (audiovisual) with Cosmos Framework | Generator | Text-to-image, plus text-to-video and image-to-video each with sound on or off, through the `cosmos_framework.scripts.inference` entrypoint. | [Notebook](cookbooks/cosmos3/generator/audiovisual/run_with_cosmos_framework.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/audiovisual/run_with_cosmos_framework.ipynb) |
 | Generator (audiovisual) with vLLM-Omni | Generator | Text-to-image, text-to-video, image-to-video, and video-to-video, with supported sound modes, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/audiovisual/run_with_vllm_omni.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/audiovisual/run_with_vllm_omni.ipynb) |
 | Generator (audiovisual) with NIM | Generator | Text2Video and Image2Video only, against the prebuilt `Cosmos3-Generator` NIM; requests use `POST /v1/infer` and decode JSON `b64_video` responses. | [Notebook](cookbooks/cosmos3/generator/audiovisual/run_with_nim.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/audiovisual/run_with_nim.ipynb) |
+| Generator (audiovisual) with SGLang | Generator | Text-to-image, plus text-to-video and image-to-video each with sound on or off, against an OpenAI-compatible SGLang server. | [Notebook](cookbooks/cosmos3/generator/audiovisual/run_with_sglang.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/audiovisual/run_with_sglang.ipynb) |
 | Forward dynamics with Cosmos Framework | Generator | Forward dynamics: action-conditioned future-observation prediction for AV, DROID, and UMI, through the `cosmos_framework.scripts.inference` entrypoint. | [Notebook](cookbooks/cosmos3/generator/action/run_fd_with_cosmos_framework.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_fd_with_cosmos_framework.ipynb) |
-| Forward dynamics with vLLM-Omni | Generator | Forward dynamics: action-conditioned future-observation prediction for AV, DROID, and UMI, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/action/run_fd_with_vllm.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_fd_with_vllm.ipynb) |
+| Forward dynamics with vLLM-Omni | Generator | Forward dynamics: action-conditioned future-observation prediction for AV, DROID, and UMI, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/action/run_fd_with_vllm_omni.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_fd_with_vllm_omni.ipynb) |
+| Forward dynamics with SGLang | Generator | Forward dynamics: action-conditioned future-observation prediction for AV, DROID, and UMI, against an OpenAI-compatible SGLang server. | [Notebook](cookbooks/cosmos3/generator/action/run_fd_with_sglang.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_fd_with_sglang.ipynb) |
 | Inverse dynamics with Cosmos Framework | Generator | Inverse dynamics: ego-motion trajectory prediction from input AV video, through the `cosmos_framework.scripts.inference` entrypoint. | [Notebook](cookbooks/cosmos3/generator/action/run_id_with_cosmos_framework.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_id_with_cosmos_framework.ipynb) |
-| Inverse dynamics with vLLM-Omni | Generator | Inverse dynamics: ego-motion trajectory prediction from input AV video, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/action/run_id_with_vllm.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_id_with_vllm.ipynb) |
+| Inverse dynamics with vLLM-Omni | Generator | Inverse dynamics: ego-motion trajectory prediction from input AV video, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/action/run_id_with_vllm_omni.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_id_with_vllm_omni.ipynb) |
+| Inverse dynamics with SGLang | Generator | Inverse dynamics: ego-motion trajectory prediction from input AV video, against an OpenAI-compatible SGLang server. | [Notebook](cookbooks/cosmos3/generator/action/run_id_with_sglang.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/action/run_id_with_sglang.ipynb) |
 | Transfer with Cosmos Framework | Generator | Video transfer: edge, blur, depth, segmentation, and world-scenario controls with captions, through the `cosmos_framework.scripts.inference` entrypoint. | [Notebook](cookbooks/cosmos3/generator/transfer/run_video_transfer_with_cosmos_framework.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/transfer/run_video_transfer_with_cosmos_framework.ipynb) |
 | Transfer with vLLM-Omni | Generator | Video transfer: edge, blur, depth, segmentation, and world-scenario controls with captions, against an OpenAI-compatible vLLM-Omni server. | [Notebook](cookbooks/cosmos3/generator/transfer/run_video_transfer_with_vllm_omni.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/generator/transfer/run_video_transfer_with_vllm_omni.ipynb) |
 | Reasoner with Cosmos Framework | Reasoner | Text and image reasoning: detailed captioning, robot task planning, 2D grounding, describe-anything, and action-trajectory prompts, through the `cosmos_framework.scripts.inference` entrypoint. | [Notebook](cookbooks/cosmos3/reasoner/run_with_cosmos_framework.ipynb) | [![Render with nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/nvidia/cosmos/blob/main/cookbooks/cosmos3/reasoner/run_with_cosmos_framework.ipynb) |
@@ -887,29 +1136,68 @@ We are building examples that show Cosmos 3 capabilities end to end, including w
 
 ### Inference Benchmarks
 
-Cosmos 3 latency and serving numbers live in [`inference_benchmarks.md`](inference_benchmarks.md). Generator sections report diffusion-path latency (seconds) by GPU, engine, resolution, and tensor-parallel width; Reasoner sections report vLLM serving metrics under concurrent load. Empty cells mean a combination has not been measured yet, not that it is unsupported.
+Cosmos 3 latency and serving results live in [`inference_benchmarks.md`](inference_benchmarks.md). Generator sections report visual-generation and world-model latency in seconds across GPUs and integrated computing platforms, including image and video generation, forward and inverse dynamics, and policy generation. Reasoner sections report vLLM serving metrics under concurrent load, with additional eager Transformers measurements for embedded platforms. Empty cells mean a combination has not been measured yet, not that it is unsupported.
 
 | Benchmark | Surface | Model | What it covers |
 | --- | --- | --- | --- |
-| [Cosmos3-Nano generator](inference_benchmarks.md#cosmos3-nano-generator) | Generator | Cosmos3-Nano | Text-to-image, text-to-video, and image-to-video latency across PyTorch, vLLM-Omni, and Diffusers |
+| [Cosmos3-Edge generator](inference_benchmarks.md#cosmos3-edge-generator) | Generator | Cosmos3-Edge | Image-to-video, forward dynamics, inverse dynamics, and DROID policy latency across PyTorch and vLLM-Omni on data center, workstation, and embedded platforms |
+| [Cosmos3-Nano generator](inference_benchmarks.md#cosmos3-nano-generator) | Generator | Cosmos3-Nano | Text-to-image, text-to-video, and image-to-video latency across PyTorch, vLLM-Omni, Diffusers, and NIM |
 | [Cosmos3-Super generator](inference_benchmarks.md#cosmos3-super-generator) | Generator | Cosmos3-Super | The same modalities and engines at the larger checkpoint scale |
+| [Cosmos3-Edge reasoner](inference_benchmarks.md#cosmos3-edge-reasoner) | Reasoner | Cosmos3-Edge | vLLM serving metrics on RTX PRO GPUs and eager Transformers prefill, decode, and end-to-end latency on embedded platforms |
 | [Cosmos3-Nano reasoner](inference_benchmarks.md#cosmos3-nano-reasoner) | Reasoner | Cosmos3-Nano | vLLM serving metrics — TTFT, request latency, and throughput at concurrency 1/64/128/256 |
 | [Cosmos3-Super reasoner](inference_benchmarks.md#cosmos3-super-reasoner) | Reasoner | Cosmos3-Super | The same serving metrics at the larger checkpoint scale; coverage is sparser than Nano |
 
 ### Finetune
 
-Post-train Cosmos 3 on your own data with the supervised fine-tuning (SFT) cookbooks below. Each recipe is a self-contained launch script: a single `bash launch_sft_<recipe>.sh` prepares or validates the data, prepares the base checkpoint, and runs 8×H100 training.
+Post-train Cosmos 3 on your own data with the supervised fine-tuning (SFT) cookbooks below. Each recipe is a self-contained launch script: a single `bash launch_sft_<recipe>.sh` prepares or validates the data, prepares any needed base checkpoint, and runs 8×H100 training.
 
 | Example | Surface | Model | What it covers | Script |
 | --- | --- | --- | --- | --- |
 | [Vision generator SFT](cookbooks/cosmos3/generator/audiovisual/finetune/README.md) | Generator | Cosmos3-Nano | Full SFT on captioned video | [`launch_sft_vision_nano.sh`](cookbooks/cosmos3/generator/audiovisual/finetune/launch_sft_vision_nano.sh) |
 | [Vision generator SFT](cookbooks/cosmos3/generator/audiovisual/finetune/README.md) | Generator | Cosmos3-Super | LoRA SFT on captioned video | [`launch_sft_vision_super.sh`](cookbooks/cosmos3/generator/audiovisual/finetune/launch_sft_vision_super.sh) |
-| [Policy-DROID SFT](cookbooks/cosmos3/generator/action/finetune/README.md) | Generator | Cosmos3-Nano | Full SFT for action policy on the DROID dataset | [`launch_sft_action_policy_droid.sh`](cookbooks/cosmos3/generator/action/finetune/launch_sft_action_policy_droid.sh) |
+| [Vision generator SFT](cookbooks/cosmos3/generator/audiovisual/finetune/README.md) | Generator | Cosmos3-Edge | Full SFT on captioned video | [`launch_sft_vision_edge.sh`](cookbooks/cosmos3/generator/audiovisual/finetune/launch_sft_vision_edge.sh) |
+| [Policy-DROID SFT](cookbooks/cosmos3/generator/action/finetune/README.md) | Generator | Cosmos3-Nano | Full SFT for action policy on the DROID dataset | [`launch_sft_action_policy_droid_nano.sh`](cookbooks/cosmos3/generator/action/finetune/launch_sft_action_policy_droid_nano.sh) |
 | [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Nano | Alignment SFT on LLaVA-OneVision | [`launch_sft_llava_ov.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_llava_ov.sh) |
 | [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Nano | Physical-plausibility SFT on VideoPhy-2 | [`launch_sft_videophy2_nano.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_videophy2_nano.sh) |
 | [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Super | Physical-plausibility SFT on VideoPhy-2 | [`launch_sft_videophy2_super.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_videophy2_super.sh) |
+| [Reasoner SFT](cookbooks/cosmos3/reasoner/finetune/README.md) | Reasoner | Cosmos3-Edge | Physical-plausibility SFT on VideoPhy-2 | [`launch_sft_videophy2_edge.sh`](cookbooks/cosmos3/reasoner/finetune/launch_sft_videophy2_edge.sh) |
 
 These cookbooks run on the [Cosmos Framework](https://github.com/NVIDIA/cosmos-framework), NVIDIA's end-to-end Physical AI framework for training and serving world models. For the full post-training reference — every config field, raw `torchrun`, resuming, and advanced parallelism — see the [Cosmos Framework training guide](https://github.com/NVIDIA/cosmos-framework/blob/main/docs/training.md).
+
+### Export and Convert Checkpoints
+
+Training writes sharded PyTorch Distributed Checkpoints (DCP) under `outputs/train/<project>/<group>/<name>/checkpoints/`. Two Cosmos Framework scripts turn a finished run into portable, inference-ready formats. Run both from a framework checkout with its venv active (see the recipe READMEs for setup).
+
+**Step 1 — Export to Hugging Face safetensors** (`export_model`). Converts the DCP checkpoint into a Hugging Face safetensors directory:
+
+```shell
+RUN_DIR=outputs/train/<project>/<group>/<name>
+CKPT=$RUN_DIR/checkpoints/$(cat "$RUN_DIR/checkpoints/latest_checkpoint.txt")
+python -m cosmos_framework.scripts.export_model \
+    --checkpoint-path "$CKPT" --config-file "$RUN_DIR/config.yaml" -o "$RUN_DIR/model"
+```
+
+The exported `$RUN_DIR/model` is what the Transformers, vLLM, and Cosmos Framework inference paths depend on.
+
+**Step 2 — Convert to Diffusers** (`convert_model_to_diffusers`). Converts the Step 1 export into a Diffusers pipeline (`transformer/`, `vae/`, `scheduler/`, …):
+
+```shell
+python -m cosmos_framework.scripts.convert_model_to_diffusers \
+    --checkpoint-path "$RUN_DIR/model" -o "$RUN_DIR/diffusers"
+```
+
+The input is the safetensors directory from Step 1 (not a raw DCP), so run the export first.
+
+For the full export/convert reference and per-model notes, see the [Cosmos Framework training guide](https://github.com/NVIDIA/cosmos-framework/blob/main/docs/training.md#export-checkpoint-to-hugging-face-safetensors).
+
+### Distill
+
+Distill the Cosmos3-Super text-to-image and image-to-video teachers into four-step DMD2 students with short training, resume, and student-only checkpoint export recipes. These recipes demonstrate the workflow on public sample data; they are not production-quality reproduction recipes.
+
+| Example | Surface | Teacher → student | What it covers | Script |
+| --- | --- | --- | --- | --- |
+| [Text-to-image DMD2 distillation](cookbooks/cosmos3/generator/audiovisual/distill/README.md) | Generator | Cosmos3-Super-Text2Image → Cosmos3-Super-Text2Image-4Step | Short T2I training, resume, and student-only export | [`launch_distillation_t2i.sh`](cookbooks/cosmos3/generator/audiovisual/distill/launch_distillation_t2i.sh) |
+| [Image-to-video DMD2 distillation](cookbooks/cosmos3/generator/audiovisual/distill/README.md) | Generator | Cosmos3-Super-Image2Video → Cosmos3-Super-Image2Video-4Step | Short I2V training, resume, and student-only export | [`launch_distillation_i2v.sh`](cookbooks/cosmos3/generator/audiovisual/distill/launch_distillation_i2v.sh) |
 
 ### Limitations
 
@@ -919,7 +1207,7 @@ Cosmos 3 can produce artifacts in long, high-resolution, or physically complex o
 
 | Project | Purpose |
 | --- | --- |
-| [Cosmos Framework](https://github.com/NVIDIA/cosmos-framework) | End-to-end Physical AI framework for training and serving world models, including setup, inference, and training |
+| [Cosmos Framework](https://github.com/NVIDIA/cosmos-framework) | End-to-end Physical AI framework for training and serving world models, including setup, inference, and training. Ships [Agent Skills](https://github.com/NVIDIA/cosmos-framework#agent-skills) (`.agents/skills/` and `.claude/skills/`) for AGENTS.md-aware coding agents (Claude Code, Codex CLI, Cursor, etc.). |
 | [Cosmos Curator](https://github.com/NVIDIA/cosmos-curator) | Distributed Physical AI data curation system covering processing, annotation, filtering, and deduplication |
 | [Cosmos Evaluator](https://github.com/NVIDIA/cosmos-evaluator) | Automated Physical AI evaluation system for world generation and world reasoning outputs |
 
